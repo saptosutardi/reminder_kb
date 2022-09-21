@@ -2,19 +2,27 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder_kb/container_next_visiting_header.dart';
+import 'package:flutter_reminder_kb/container_today.dart';
 import 'NotificationService.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 const String header = "Pengingat";
 const String header2 = "KB Suntik";
 const String today = "Hari ini";
 const String dateToday = "";
 const String nextVisiting = "Kunjungan Berikutnya";
-const String choose = "Pilih salah satu untuk pengingat";
+String choose =
+    "Pilih salah satu di bawah ini untuk mengaktifkan alarm/pengingat: ";
+bool visiblilty1 = true;
+bool visiblilty3 = true;
 const String month = "Bulan";
 const String dateNext1 = "16 Okt 2022";
 const String dateNext3 = "11 Des 2022";
@@ -27,6 +35,12 @@ String notif_2_day_before =
 String str_2_day_to_injection = "2 Hari lagi Anda harus suntik KB";
 String str_1_day_to_injection = "1 Hari lagi Anda harus suntik KB";
 String str_today_to_injection = "Hari ini Anda harus suntik KB";
+var username;
+
+final prefs = SharedPreferences.getInstance();
+
+var visible2month = true;
+const int startReminder = 2;
 const Color background = Color(0XFFF7F5FD); // Color(0XFFFAF9FE);
 const Color textPurple = Color(0XFF3D3F71);
 const Color textRed = Color(0XFFBD1B4C);
@@ -47,9 +61,15 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return MaterialApp(
       title: 'Pengingat KB',
-      theme: ThemeData(primarySwatch: Colors.green, useMaterial3: true),
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+        useMaterial3: true,
+        textTheme: GoogleFonts.latoTextTheme(textTheme),
+      ),
+      // theme:
       home: const MyHomePage(title: 'KB Suntik'),
       localizationsDelegates: const [GlobalMaterialLocalizations.delegate],
       supportedLocales: const [Locale('en'), Locale('id')],
@@ -69,6 +89,7 @@ class MyHomePage extends StatefulWidget {
 class MyHomePageState extends State<MyHomePage> {
   int textHeader = 0;
   int textDescription = 0;
+  int injectionSelected = 0;
 
   @override
   void initState() {
@@ -79,18 +100,12 @@ class MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    String formatedToday = DateFormat('dd MMM yyyy').format(now);
-    String dateOfToday = formatedToday;
-
     final nextOneMonth = now.add(const Duration(days: 28));
-    String formatedOneMonth1 =
-        DateFormat('dd MMM', "id_ID").format(nextOneMonth);
-    String formatedOneMonth2 = DateFormat('yyyy').format(nextOneMonth);
-
+    String formatedDateSimple =
+        DateFormat('dd MMM yy', "id_ID").format(nextOneMonth);
     final nextThreeMonth = now.add(const Duration(days: 28 * 3));
-    String formatedThreeMonth1 =
-        DateFormat('dd MMM', "id_ID").format(nextThreeMonth);
-    String formatedThreeMonth2 = DateFormat('yyyy').format(nextThreeMonth);
+    String formatedDateSimple3 =
+        DateFormat('dd MMM yy', "id_ID").format(nextThreeMonth);
 
     return Scaffold(
       appBar: AppBar(
@@ -150,239 +165,197 @@ class MyHomePageState extends State<MyHomePage> {
         child: Column(
           // mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(10),
-              margin: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.transparent),
-                borderRadius: BorderRadius.circular(5.0),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.calendar_today_outlined,
-                      color: textPurple,
-                    ),
-                    onPressed: () {
-                      // do something
-                    },
-                  ),
-                  const Text(
-                    "Hari ini: ",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: textPurple,
-                        fontSize: 18),
-                  ),
-                  Text(
-                    dateOfToday,
-                    style: TextStyle(
-                        fontWeight: FontWeight.normal,
-                        color: textPurple,
-                        fontSize: 18),
-                  )
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.only(left: 10),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_circle_right_outlined,
-                      color: textPurple,
-                      size: 32,
-                    ),
-                    onPressed: () {
-                      // do something
-                    },
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: const <Widget>[
-                      Text(
-                        "Kunjungan Berikutnya: ",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: textPurple,
-                            fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.only(left: 20, bottom: 10),
-              child: Row(
-                children: const <Widget>[
-                  Flexible(
-                    child: Text(
-                      "Pilih salah satu di bawah ini untuk mengaktifkan alarm/pengingat: ",
-                      style: TextStyle(
-                          fontWeight: FontWeight.normal, color: textRed),
-                    ),
-                  )
-                ],
-              ),
-            ),
+            const ContainerToday(),
+            const NextVisitingHeader(),
+            Padding(
+                padding: const EdgeInsets.only(left: 20, right: 20),
+                child: Text(
+                  choose,
+                  style: const TextStyle(color: textRed),
+                )),
             Row(
               children: [
-                Expanded(
-                    child: TextButton(
-                        onPressed: () {
-                          notification(notif_1, notif_2_day_before);
-
-                          final now = DateTime.now();
-                          /* AndroidAlarmManager.oneShotAt(
-                              now, 1, _oneShotAtTaskCallback); */
-                          final int helloAlarmID = 0;
-                        },
-                        child: Container(
-                            margin: const EdgeInsets.only(left: 10),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: orange,
-                              border: Border.all(color: Colors.transparent),
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const <Widget>[
-                                    CircleAvatar(
-                                      backgroundColor: Colors.white,
-                                      radius: 12,
-                                      child: Center(
-                                        child: Text(
-                                          "1",
-                                          style: TextStyle(color: Colors.black),
+                if (visiblilty1)
+                  Expanded(
+                      child: TextButton(
+                          // On Pressed firs date
+                          onPressed: () {
+                            notification(notif_1, notif_2_day_before, 28, 1);
+                          },
+                          child: Container(
+                              margin: const EdgeInsets.only(left: 10),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: orange,
+                                border: Border.all(color: Colors.transparent),
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const <Widget>[
+                                      Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text("KB",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
+                                      ),
+                                      CircleAvatar(
+                                        backgroundColor: Colors.white,
+                                        radius: 12,
+                                        child: Center(
+                                          child: Text(
+                                            "1",
+                                            style: TextStyle(color: orange),
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Text("Bulan",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 20)),
-                                    )
-                                  ],
-                                ),
-                                const Divider(
-                                  color: Colors.white,
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.all(10),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        formatedOneMonth1,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 24,
-                                            color: Colors.white),
+                                      Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text("Bulan",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
                                       )
                                     ],
                                   ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      formatedOneMonth2,
+                                  const Divider(
+                                    color: Colors.white,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          formatedDateSimple,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 24,
+                                              color: Colors.white),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border:
+                                          Border.all(color: Colors.transparent),
+                                      borderRadius: BorderRadius.circular(5.0),
+                                    ),
+                                    child: const Text(
+                                      "28 HARI LAGI",
                                       style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 40,
-                                          color: Colors.white),
-                                    )
-                                  ],
-                                )
-                              ],
-                            )))),
+                                          fontSize: 15, color: orange),
+                                    ),
+                                  )
+                                ],
+                              )))),
                 const SizedBox(
                     // width: 10,
                     ),
-                Expanded(
-                    child: TextButton(
-                        onPressed: () {
-                          notification(notif_1, notif_2_day_before);
-                          /* AndroidAlarmManager.oneShotAt(
-                            DateTime.now().add(const Duration(seconds: 1)),
-                            123,
-                            _oneShotAtTaskCallback(),
-                            alarmClock: true,
-                          ); */
-                        },
-                        child: Container(
-                            margin: const EdgeInsets.only(right: 10),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: purple,
-                              border: Border.all(color: Colors.transparent),
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const <Widget>[
-                                    CircleAvatar(
-                                      backgroundColor: Colors.white,
-                                      radius: 12,
-                                      child: Center(
-                                        child: Text(
-                                          "3",
-                                          style: TextStyle(color: Colors.black),
+
+                // Injeksi 3 bulan
+                if (visiblilty3)
+                  Visibility(
+                    visible: true,
+                    child: Expanded(
+                        child: TextButton(
+                            // On Pressed firs date
+                            onPressed: () {
+                              notification(
+                                notif_1,
+                                notif_2_day_before,
+                                28,
+                                3,
+                              );
+                            },
+                            child: Container(
+                                margin: const EdgeInsets.only(right: 10),
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: purple,
+                                  border: Border.all(color: Colors.transparent),
+                                  borderRadius: BorderRadius.circular(5.0),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: const <Widget>[
+                                        Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Text("KB",
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16)),
                                         ),
-                                      ),
+                                        CircleAvatar(
+                                          backgroundColor: Colors.white,
+                                          radius: 12,
+                                          child: Center(
+                                            child: Text(
+                                              "3",
+                                              style: TextStyle(
+                                                color: purple,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        Padding(
+                                          padding: EdgeInsets.all(10),
+                                          child: Text("Bulan",
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 16)),
+                                        )
+                                      ],
+                                    ),
+                                    const Divider(
+                                      color: Colors.white,
                                     ),
                                     Padding(
-                                      padding: EdgeInsets.all(10),
-                                      child: Text("Bulan",
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 20)),
-                                    )
-                                  ],
-                                ),
-                                const Divider(
-                                  color: Colors.white,
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(10),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        formatedThreeMonth1,
+                                      padding: const EdgeInsets.all(10),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            formatedDateSimple3,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 24,
+                                                color: Colors.white),
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.all(5),
+                                      margin: const EdgeInsets.only(bottom: 10),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        border: Border.all(
+                                            color: Colors.transparent),
+                                        borderRadius:
+                                            BorderRadius.circular(5.0),
+                                      ),
+                                      child: const Text(
+                                        "84 HARI LAGI",
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 24,
-                                            color: Colors.white),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      formatedThreeMonth2,
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 40,
-                                          color: Colors.white),
+                                            fontSize: 15, color: purple),
+                                      ),
                                     )
                                   ],
-                                )
-                              ],
-                            )))),
+                                )))),
+                  ),
               ],
             ),
           ],
@@ -391,7 +364,8 @@ class MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void notification(String? text1, String text2) async {
+  void notification(
+      String? text1, String text2, int day, int monthSelected) async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
@@ -411,10 +385,27 @@ class MyHomePageState extends State<MyHomePage> {
           actions: <Widget>[
             TextButton(
               child: const Text('Oke'),
-              onPressed: () {
-                NotificationService()
-                    .showNotification(1, "Waktunya untuk suntik KB", notif_1);
+              onPressed: () async {
+                NotificationService().showNotification(
+                    1, "Waktunya untuk suntik KB", notif_1, day);
+                NotificationService().showNotification2(
+                    1, "Waktunya untuk suntik KB", notif_1, day);
+                NotificationService().showNotification3(
+                    1, "Waktunya untuk suntik KB", notif_1, day);
                 Navigator.of(context).pop();
+                visible2month = false;
+                if (monthSelected == 1) {
+                  visiblilty1 = true;
+                  visiblilty3 = false;
+                  injectionSelected = 1;
+                } else {
+                  visiblilty1 = false;
+                  visiblilty3 = true;
+                  injectionSelected = 3;
+                }
+                setState(() {
+                  choose = "Anda sudah memilih KB $injectionSelected bulan...";
+                });
               },
             ),
           ],
@@ -422,11 +413,4 @@ class MyHomePageState extends State<MyHomePage> {
       },
     );
   }
-
-  /* String selected(int a) {
-    String text;
-    if (a == 1) {
-      text = sele
-    }
-  } */
 }

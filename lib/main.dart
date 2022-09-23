@@ -2,8 +2,11 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_reminder_kb/about_us.dart';
 import 'package:flutter_reminder_kb/container_next_visiting_header.dart';
 import 'package:flutter_reminder_kb/container_today.dart';
+import 'package:flutter_reminder_kb/reset.dart';
+import 'package:restart_app/restart_app.dart';
 import 'NotificationService.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
@@ -21,8 +24,8 @@ const String dateToday = "";
 const String nextVisiting = "Kunjungan Berikutnya";
 String choose =
     "Pilih salah satu di bawah ini untuk mengaktifkan alarm/pengingat: ";
-bool visiblilty1 = true;
-bool visiblilty3 = true;
+int distance1 = 0;
+int distance3 = 0;
 const String month = "Bulan";
 const String dateNext1 = "16 Okt 2022";
 const String dateNext3 = "11 Des 2022";
@@ -37,7 +40,7 @@ String str_1_day_to_injection = "1 Hari lagi Anda harus suntik KB";
 String str_today_to_injection = "Hari ini Anda harus suntik KB";
 var username;
 
-final prefs = SharedPreferences.getInstance();
+// final prefs = SharedPreferences.getInstance();
 
 var visible2month = true;
 const int startReminder = 2;
@@ -90,11 +93,20 @@ class MyHomePageState extends State<MyHomePage> {
   int textHeader = 0;
   int textDescription = 0;
   int injectionSelected = 0;
+  int _prefMonthSelected = 0;
+
+  void loadCounter() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _prefMonthSelected = (prefs.getInt('counter') ?? 0);
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     tz.initializeTimeZones();
+    loadCounter();
   }
 
   @override
@@ -106,6 +118,23 @@ class MyHomePageState extends State<MyHomePage> {
     final nextThreeMonth = now.add(const Duration(days: 28 * 3));
     String formatedDateSimple3 =
         DateFormat('dd MMM yy', "id_ID").format(nextThreeMonth);
+
+    print("--> counter => $_prefMonthSelected");
+    bool isVisible1 = true;
+    bool isVisible3 = true;
+    bool isVisibleChoose = true;
+    bool isVisibleHaveInjection = false;
+    if (_prefMonthSelected == 1) {
+      isVisible1 = true;
+      isVisible3 = false;
+      isVisibleChoose = false;
+      isVisibleHaveInjection = true;
+    } else if (_prefMonthSelected == 3) {
+      isVisible1 = false;
+      isVisible3 = true;
+      isVisibleChoose = false;
+      isVisibleHaveInjection = true;
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -132,31 +161,25 @@ class MyHomePageState extends State<MyHomePage> {
               ]),
         ),
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(
-              Icons.people,
-              color: textPurple,
-            ),
-            onPressed: () {
-              showAboutDialog(
-                context: context,
-                applicationName: "Pengingat KB Suntik",
-                applicationVersion: "2.0",
-                applicationLegalese: null,
-                children: const [
-                  Text("Created:"),
-                  Text("Mahasiswa Alih Jenjang D-IV"),
-                  Text("Kebidanan angkatan IV"),
-                  Text("Tahun ajaran 2022/2023"),
-                  Text("STIKES Mataram"),
-                  Divider(
-                    color: purple,
+          PopupMenuButton(
+            icon: const Icon(Icons.more_vert, color: textPurple),
+            itemBuilder: (context) => [
+              const PopupMenuItem(child: AboutUs()),
+              PopupMenuItem(
+                child: TextButton.icon(
+                  label: const Text(
+                    "Hapus Pengingat",
+                    style: TextStyle(color: textPurple),
                   ),
-                  Text("Programmer: dr. Sapto Sutardi")
-                ],
-              );
-            },
-          )
+                  icon: const Icon(
+                    Icons.restore,
+                    color: textPurple,
+                  ),
+                  onPressed: () => dialogReset(),
+                ),
+              ),
+            ],
+          ),
         ],
         backgroundColor: background,
       ),
@@ -167,20 +190,25 @@ class MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             const ContainerToday(),
             const NextVisitingHeader(),
-            Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20),
-                child: Text(
-                  choose,
-                  style: const TextStyle(color: textRed),
-                )),
+            Visibility(
+                visible: isVisibleChoose,
+                child: Padding(
+                    padding: const EdgeInsets.only(left: 20, right: 20),
+                    child: Text(
+                      choose,
+                      style: const TextStyle(color: textRed),
+                    ))),
             Row(
               children: [
-                if (visiblilty1)
-                  Expanded(
+                Visibility(
+                  visible: isVisible1,
+                  child: Expanded(
                       child: TextButton(
                           // On Pressed firs date
                           onPressed: () {
-                            notification(notif_1, notif_2_day_before, 28, 1);
+                            dialogCongratulation(
+                                notif_1, notif_2_day_before, 28, 1);
+                            print("--> select 1 mo");
                           },
                           child: Container(
                               margin: const EdgeInsets.only(left: 10),
@@ -194,15 +222,22 @@ class MyHomePageState extends State<MyHomePage> {
                                 children: [
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: const <Widget>[
-                                      Padding(
+                                    children: <Widget>[
+                                      Visibility(
+                                        visible: isVisibleHaveInjection,
+                                        child: const Text("Bunda sudah suntik",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
+                                      ),
+                                      const Padding(
                                         padding: EdgeInsets.all(10),
                                         child: Text("KB",
                                             style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 16)),
                                       ),
-                                      CircleAvatar(
+                                      const CircleAvatar(
                                         backgroundColor: Colors.white,
                                         radius: 12,
                                         child: Center(
@@ -212,7 +247,7 @@ class MyHomePageState extends State<MyHomePage> {
                                           ),
                                         ),
                                       ),
-                                      Padding(
+                                      const Padding(
                                         padding: EdgeInsets.all(10),
                                         child: Text("Bulan",
                                             style: TextStyle(
@@ -223,6 +258,17 @@ class MyHomePageState extends State<MyHomePage> {
                                   ),
                                   const Divider(
                                     color: Colors.white,
+                                  ),
+                                  Visibility(
+                                    //courgette
+                                    visible: isVisibleHaveInjection,
+                                    child: Text(
+                                      "Bunda harus berKB sebelum tanggal:",
+                                      style: GoogleFonts.merienda(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(10),
@@ -257,24 +303,25 @@ class MyHomePageState extends State<MyHomePage> {
                                   )
                                 ],
                               )))),
+                ),
                 const SizedBox(
                     // width: 10,
                     ),
 
                 // Injeksi 3 bulan
-                if (visiblilty3)
+                if (isVisible3 == true)
                   Visibility(
-                    visible: true,
+                    visible: isVisible3,
                     child: Expanded(
                         child: TextButton(
-                            // On Pressed firs date
                             onPressed: () {
-                              notification(
+                              dialogCongratulation(
                                 notif_1,
                                 notif_2_day_before,
                                 28,
                                 3,
                               );
+                              print("--> select 3mo");
                             },
                             child: Container(
                                 margin: const EdgeInsets.only(right: 10),
@@ -364,7 +411,7 @@ class MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void notification(
+  void dialogCongratulation(
       String? text1, String text2, int day, int monthSelected) async {
     return showDialog<void>(
       context: context,
@@ -376,41 +423,88 @@ class MyHomePageState extends State<MyHomePage> {
           content: SingleChildScrollView(
             child: ListBody(
               children: const <Widget>[
-                Text("Anda sudah suntik KB."),
+                Text("Buda sudah suntik KB."),
                 Text(
-                    'Selanjutnya aplikasi akan mengingatkan Anda, mulai 2 hari sebelum Anda harus berKB selanjutnya'),
+                    'Selanjutnya aplikasi akan mengingatkan Bunda, mulai 2 hari sebelum Bunda harus berKB selanjutnya'),
               ],
             ),
           ),
           actions: <Widget>[
             TextButton(
-              child: const Text('Oke'),
+              onPressed: () => Navigator.pop(
+                context,
+                'Cancel',
+              ),
+              child: const Text(
+                'Tidak',
+                style: TextStyle(color: textPurple),
+              ),
+            ),
+            TextButton(
+              child: const Text(
+                'Oke',
+                style: TextStyle(color: purple),
+              ),
               onPressed: () async {
                 NotificationService().showNotification(
                     1, "Waktunya untuk suntik KB", notif_1, day);
-                NotificationService().showNotification2(
-                    1, "Waktunya untuk suntik KB", notif_1, day);
-                NotificationService().showNotification3(
-                    1, "Waktunya untuk suntik KB", notif_1, day);
                 Navigator.of(context).pop();
                 visible2month = false;
+
+                SharedPreferences prefs = await SharedPreferences.getInstance();
                 if (monthSelected == 1) {
-                  visiblilty1 = true;
-                  visiblilty3 = false;
                   injectionSelected = 1;
+                  prefs.setInt('counter', monthSelected);
+                  print("--> save pref = $monthSelected");
                 } else {
-                  visiblilty1 = false;
-                  visiblilty3 = true;
                   injectionSelected = 3;
+                  prefs.setInt('counter', monthSelected);
+                  print("--> save pref = $monthSelected");
                 }
-                setState(() {
-                  choose = "Anda sudah memilih KB $injectionSelected bulan...";
-                });
+
+                Restart.restartApp();
               },
             ),
           ],
         );
       },
+    );
+  }
+
+  void dialogReset() async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Hapus Pengingat'),
+        content: const Text(
+            'Pengingat akan diseting ulang. Memori alarm/pengingat akan dihapus. Bunda yakin untuk melakukan seting ulang alarm/pengingat?'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(
+              context,
+              'Cancel',
+            ),
+            child: const Text(
+              'Tidak',
+              style: TextStyle(color: textPurple),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              SharedPreferences preferences =
+                  await SharedPreferences.getInstance();
+              await preferences.clear();
+
+              Restart.restartApp();
+              Navigator.pop(context, 'OK');
+            },
+            child: const Text(
+              'Iya',
+              style: TextStyle(color: textPurple),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

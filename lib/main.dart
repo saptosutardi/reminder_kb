@@ -21,7 +21,6 @@ const String header = "Pengingat";
 const String header2 = "KB Suntik";
 const String today = "Hari ini";
 const String dateToday = "";
-const String nextVisiting = "Kunjungan Berikutnya";
 String choose =
     "Pilih salah satu di bawah ini untuk mengaktifkan alarm/pengingat: ";
 int distance1 = 0;
@@ -94,11 +93,13 @@ class MyHomePageState extends State<MyHomePage> {
   int textDescription = 0;
   int injectionSelected = 0;
   int _prefMonthSelected = 0;
+  String _prefMonthSelected2 = "";
 
   void loadCounter() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       _prefMonthSelected = (prefs.getInt('counter') ?? 0);
+      _prefMonthSelected2 = (prefs.getString('counter2') ?? "");
     });
   }
 
@@ -112,18 +113,55 @@ class MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final nextOneMonth = now.add(const Duration(days: 28));
-    String formatedDateSimple =
-        DateFormat('dd MMM yy', "id_ID").format(nextOneMonth);
-    final nextThreeMonth = now.add(const Duration(days: 28 * 3));
-    String formatedDateSimple3 =
-        DateFormat('dd MMM yy', "id_ID").format(nextThreeMonth);
+    String formatedDateSimple1;
+    String formatedDateSimple3;
+    // DateTime dateNextVisiting = DateTime.now();
+    print("--> get date length = $_prefMonthSelected2");
+
+    int days28 = 28;
+    int days84 = 84;
+    if (_prefMonthSelected2.length > 0) {
+      DateTime data = DateTime.parse(_prefMonthSelected2);
+      formatedDateSimple1 = DateFormat('dd MMM yy', "id_ID").format(data);
+      formatedDateSimple3 = formatedDateSimple1;
+      final currentDate = DateTime.now();
+
+      days28 = (data.difference(currentDate).inDays) + 1;
+      if (currentDate.year == data.year &&
+          currentDate.month == data.month &&
+          currentDate.day == data.day) {
+        days28 = 0;
+        print("--> tanggal sama = $data");
+      }
+
+      /* isSameDay(data, currentDate) {
+        days28 = 0;
+      } */
+
+/* 
+      if (days28 < 1) {
+        days28++;
+      } */
+
+      days84 = days28;
+    } else {
+      final nextOneMonth = now.add(Duration(days: days28));
+      formatedDateSimple1 =
+          DateFormat('dd MMM yy', "id_ID").format(nextOneMonth);
+      final nextThreeMonth = now.add(Duration(days: days84));
+      formatedDateSimple3 =
+          DateFormat('dd MMM yy', "id_ID").format(nextThreeMonth);
+    }
+
+    int distance1 = 28;
+    int distance2 = 84;
 
     print("--> counter => $_prefMonthSelected");
     bool isVisible1 = true;
     bool isVisible3 = true;
     bool isVisibleChoose = true;
     bool isVisibleHaveInjection = false;
+    bool isVisibleLastWarning = false;
     if (_prefMonthSelected == 1) {
       isVisible1 = true;
       isVisible3 = false;
@@ -134,6 +172,10 @@ class MyHomePageState extends State<MyHomePage> {
       isVisible3 = true;
       isVisibleChoose = false;
       isVisibleHaveInjection = true;
+    }
+
+    if (days84 < 1 || days28 < 1) {
+      isVisibleLastWarning = true;
     }
 
     return Scaffold(
@@ -206,9 +248,11 @@ class MyHomePageState extends State<MyHomePage> {
                       child: TextButton(
                           // On Pressed firs date
                           onPressed: () {
-                            dialogCongratulation(
-                                notif_1, notif_2_day_before, 28, 1);
-                            print("--> select 1 mo");
+                            if (!isVisibleHaveInjection) {
+                              dialogCongratulation(
+                                  notif_1, notif_2_day_before, 28, 1);
+                              print("--> select 1 mo");
+                            }
                           },
                           child: Container(
                               margin: const EdgeInsets.only(left: 10),
@@ -263,10 +307,10 @@ class MyHomePageState extends State<MyHomePage> {
                                     //courgette
                                     visible: isVisibleHaveInjection,
                                     child: Text(
-                                      "Bunda harus berKB sebelum tanggal:",
+                                      "Bunda harus berKB \npaling telat tanggal:",
                                       style: GoogleFonts.merienda(
                                         color: Colors.white,
-                                        fontSize: 16,
+                                        fontSize: 14,
                                       ),
                                     ),
                                   ),
@@ -277,7 +321,7 @@ class MyHomePageState extends State<MyHomePage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          formatedDateSimple,
+                                          formatedDateSimple1,
                                           style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 24,
@@ -295,12 +339,20 @@ class MyHomePageState extends State<MyHomePage> {
                                           Border.all(color: Colors.transparent),
                                       borderRadius: BorderRadius.circular(5.0),
                                     ),
-                                    child: const Text(
-                                      "28 HARI LAGI",
-                                      style: TextStyle(
+                                    child: Text(
+                                      "$days28 HARI LAGI",
+                                      style: const TextStyle(
                                           fontSize: 15, color: orange),
                                     ),
-                                  )
+                                  ),
+                                  Visibility(
+                                      visible: isVisibleLastWarning,
+                                      child:
+                                          const Text("Bundah Harus berKB hari ini",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 24,
+                                              color: Colors.white),),
                                 ],
                               )))),
                 ),
@@ -315,13 +367,15 @@ class MyHomePageState extends State<MyHomePage> {
                     child: Expanded(
                         child: TextButton(
                             onPressed: () {
-                              dialogCongratulation(
-                                notif_1,
-                                notif_2_day_before,
-                                28,
-                                3,
-                              );
-                              print("--> select 3mo");
+                              if (!isVisibleHaveInjection) {
+                                dialogCongratulation(
+                                  notif_1,
+                                  notif_2_day_before,
+                                  84,
+                                  3,
+                                );
+                                print("--> select 3mo");
+                              }
                             },
                             child: Container(
                                 margin: const EdgeInsets.only(right: 10),
@@ -394,9 +448,9 @@ class MyHomePageState extends State<MyHomePage> {
                                         borderRadius:
                                             BorderRadius.circular(5.0),
                                       ),
-                                      child: const Text(
-                                        "84 HARI LAGI",
-                                        style: TextStyle(
+                                      child: Text(
+                                        "$days84 HARI LAGI",
+                                        style: const TextStyle(
                                             fontSize: 15, color: purple),
                                       ),
                                     )
@@ -446,21 +500,30 @@ class MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(color: purple),
               ),
               onPressed: () async {
-                NotificationService().showNotification(
-                    1, "Waktunya untuk suntik KB", notif_1, day);
+                for (int i = 0; i < 3; i++) {
+                  NotificationService().showNotification(i + 1,
+                      "Waktunya untuk suntik KB", notif_1, ((day - 2) + i));
+                }
+
                 Navigator.of(context).pop();
                 visible2month = false;
+                DateTime now = DateTime.now();
 
                 SharedPreferences prefs = await SharedPreferences.getInstance();
                 if (monthSelected == 1) {
                   injectionSelected = 1;
                   prefs.setInt('counter', monthSelected);
                   print("--> save pref = $monthSelected");
+                  now = DateTime.now().add(const Duration(days: 28));
                 } else {
                   injectionSelected = 3;
                   prefs.setInt('counter', monthSelected);
                   print("--> save pref = $monthSelected");
+                  now = DateTime.now().add(const Duration(days: 84));
                 }
+                print("--> save date = $now");
+
+                prefs.setString('counter2', now.toString());
 
                 Restart.restartApp();
               },
@@ -469,6 +532,12 @@ class MyHomePageState extends State<MyHomePage> {
         );
       },
     );
+  }
+
+  static bool isSameDay(DateTime? dateA, DateTime? dateB) {
+    return dateA?.year == dateB?.year &&
+        dateA?.month == dateB?.month &&
+        dateA?.day == dateB?.day;
   }
 
   void dialogReset() async {

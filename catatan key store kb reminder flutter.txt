@@ -1,0 +1,11 @@
+keytool -genkey -v -keystore D:\Kerja\Project\flutter_reminder_kbkey.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias key
+
+keytool -genkey -v -keystore D:\Kerja\Project\upload-keystore.jks -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+
+pw keystore 5apt05utardI atau 5utardI5apt0
+first and last name: sapto sutardi
+organizational unit :dr. sapto apps
+name organizational: dr. sapto apps
+city: mataram
+state of province: nusa tenggara barat

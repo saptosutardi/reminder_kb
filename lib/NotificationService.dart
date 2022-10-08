@@ -27,13 +27,15 @@ class NotificationService {
 
   Future<void> showNotification(
       int id, String title, String body, int day) async {
+    print("input day = $day");
     await flutterLocalNotificationsPlugin.zonedSchedule(
       id,
       title,
       body,
       // ignore: prefer_const_constructors
+
       tz.TZDateTime.now(tz.local).add(Duration(
-          seconds: day)), //schedule the notification to show after our time.
+          days: day)), //schedule the notification to show after our time.
       const NotificationDetails(
         android: AndroidNotificationDetails(
           'main_channel_1',

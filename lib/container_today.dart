@@ -9,17 +9,18 @@ class ContainerToday extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    String formatedToday = DateFormat('dd MMM yyyy').format(now);
+    String formatedToday = DateFormat('d MMM yyyy', "id_ID").format(now);
     String dateOfToday = formatedToday;
     return Container(
-      padding: const EdgeInsets.all(10),
-      margin: const EdgeInsets.all(20),
+      // padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.only(left: 20, right: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: Colors.transparent),
         borderRadius: BorderRadius.circular(5.0),
       ),
       child: Row(
+        // mainAxisAlignment: MainAxisAlignment.center,
         children: [
           IconButton(
             icon: const Icon(

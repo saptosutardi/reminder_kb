@@ -1,0 +1,119 @@
+Visibility(
+                  visible: isVisible3,
+                  child: Expanded(
+                      child: TextButton(
+                          onPressed: () {
+                            if (!isVisibleHaveInjection) {
+                              dialogCongratulation(
+                                notif_1,
+                                notif_2_day_before,
+                                84,
+                                3,
+                              );
+                              print("--> select 3mo");
+                            }
+                          },
+                          child: Container(
+                              margin: const EdgeInsets.only(right: 10),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: purple,
+                                border: Border.all(color: Colors.transparent),
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      Visibility(
+                                        visible: isVisibleHaveInjection,
+                                        child: const Text("Bunda sudah suntik",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text("KB",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
+                                      ),
+                                      const CircleAvatar(
+                                        backgroundColor: Colors.white,
+                                        radius: 12,
+                                        child: Center(
+                                          child: Text(
+                                            "3",
+                                            style: TextStyle(
+                                              color: purple,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.all(10),
+                                        child: Text("Bulan",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 16)),
+                                      )
+                                    ],
+                                  ),
+                                  const Divider(
+                                    color: Colors.white,
+                                  ),
+                                  Visibility(
+                                    //courgette
+                                    visible: isVisibleHaveInjection,
+                                    child: Text(
+                                      "Bunda harus berKB \npaling telat tanggal:",
+                                      style: GoogleFonts.merienda(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(10),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          formatedDateSimple3,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 24,
+                                              color: Colors.white),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.all(5),
+                                    margin: const EdgeInsets.only(bottom: 10),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border:
+                                          Border.all(color: Colors.transparent),
+                                      borderRadius: BorderRadius.circular(5.0),
+                                    ),
+                                    child: Text(
+                                      "$days84 HARI LAGI",
+                                      style: const TextStyle(
+                                          fontSize: 15, color: purple),
+                                    ),
+                                  ),
+                                  Visibility(
+                                      visible: isVisibleLastWarning,
+                                      child: const Text(
+                                          "Bunda HARUS berKB hari ini",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 24,
+                                              color: Colors.white))),
+                                ],
+                              )))),
+                ),

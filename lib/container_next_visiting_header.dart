@@ -17,7 +17,7 @@ class NextVisitingHeader extends StatelessWidget {
             icon: const Icon(
               Icons.arrow_circle_right_outlined,
               color: textPurple,
-              size: 32,
+              size: 22,
             ),
             onPressed: () {
               // do something
@@ -31,7 +31,7 @@ class NextVisitingHeader extends StatelessWidget {
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: textPurple,
-                    fontSize: 18),
+                    fontSize: 16),
               ),
             ],
           ),

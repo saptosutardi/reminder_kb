@@ -1,4 +1,4 @@
-package com.example.flutter_reminder_kb
+package dr.sapto.apps.flutter_reminder_kb
 
 import io.flutter.embedding.android.FlutterActivity
 
